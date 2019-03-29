@@ -2,20 +2,22 @@ package com.epam.impl;
 
 import java.util.Set;
 
-class Graph {
-    private final Set<Node> nodes;
-    private final Set<Edge> edges;
+class Graph <N extends Node> implements GraphInterface{
+    private final Set<N> nodes;
+    private final Set<Edge<N>> edges;
 
-    public Graph(Set<Node> nodes, Set<Edge> edges){
+    public Graph(Set<N> nodes, Set<Edge<N>> edges){
         this.nodes = nodes;
         this.edges = edges;
     }
 
-    public Set<Edge> getEdges(){
+    @Override
+    public Set<Edge<N>> getEdges(){
         return edges;
     }
 
-    public Set<Node> getNodes(){
+    @Override
+    public Set<N> getNodes(){
         return nodes;
     }
 }

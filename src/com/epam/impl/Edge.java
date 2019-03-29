@@ -2,31 +2,35 @@ package com.epam.impl;
 
 import java.util.Objects;
 
-class Edge {
-    private final Node startPoint;
-    private final Node endPoint;
+class Edge <N extends Node> implements EdgeInterface{
+    private final N startPoint;
+    private final N endPoint;
     private final Integer length;
     private final Integer weight;
 
-    public Edge(Node startPoint, Node endPoint, Integer length, Integer weight){
+    public Edge(N startPoint, N endPoint, Integer length, Integer weight){
         this.startPoint = startPoint;
         this.endPoint = endPoint;
         this.length = length;
         this.weight = weight;
     }
 
-    public Node getStartPoint() {
+    @Override
+    public N getStartPoint() {
         return startPoint;
     }
 
-    public Node getTargetPoint() {
+    @Override
+    public N getTargetPoint() {
         return endPoint;
     }
 
+    @Override
     public Integer getLength() {
         return length;
     }
 
+    @Override
     public Integer getWeight() {
         return weight;
     }

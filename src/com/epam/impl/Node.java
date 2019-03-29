@@ -2,13 +2,15 @@ package com.epam.impl;
 
 import java.util.Objects;
 
-class Node {
+class Node implements NodeInterface{
+
     private final String name;
 
     public Node(String name){
         this.name = name;
     }
 
+    @Override
     public String getName(){
         return this.name;
     }

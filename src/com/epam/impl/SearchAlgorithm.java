@@ -1,23 +1,26 @@
 package com.epam.impl;
 
 import java.util.*;
+import java.util.function.Function;
 
-public class SearchAlgorithm {
-    private final List<Node> nodesList;
-    private final List<Edge> edgesList;
-    private Set<Node> visitedNodes = new HashSet<>();
-    private Set<Node> notVisitedNodes = new HashSet<>();
-    private List<Node> pathNodes = new LinkedList<>();
-    private Map<Node, Node> nodesTree = new HashMap<>();
-    private Map<Node, Integer> distance = new HashMap<>();
+public class SearchAlgorithm <N extends Node> {
+    private final List<N> nodesList;
+    private final List<Edge<N>> edgesList;
+    private Set<N> visitedNodes = new HashSet<>();
+    private Set<N> notVisitedNodes = new HashSet<>();
+    private List<N> pathNodes = new LinkedList<>();
+    private Map<N, N> nodesTree = new HashMap<>();
+    private Map<N, Integer> distance = new HashMap<>();
     private Integer cost = 0;
+    private Function<Edge<N>, Integer> priceCount;
 
-    public SearchAlgorithm(Graph graph){
+    public SearchAlgorithm(Graph graph, Function<Edge<N>, Integer> priceCount){
         this.nodesList = new ArrayList<>(graph.getNodes());
         this.edgesList = new ArrayList<>(graph.getEdges());
+        this.priceCount = priceCount;
     }
 
-    public List<Node> getPathNodes(){
+    public List<N> getPathNodes(){
         if (pathNodes == null) throw new NullPointerException("No path found");
         else return pathNodes;
     }
@@ -28,15 +31,15 @@ public class SearchAlgorithm {
 
     public void algorithm(String start, String end){
 
-        for(Node node : nodesList){
+        for(N node : nodesList){
             if(node.getName().equals(start)){
                 DijkstraAlgorithm(node);
                 break;
             }
         }
 
-        Node step = null;
-        for(Node node : nodesList) {
+        N step = null;
+        for(N node : nodesList) {
             if (node.getName().equals(end)){
                 step = node;
                 break;
@@ -55,25 +58,25 @@ public class SearchAlgorithm {
 
         int i = 0;
         while(i < pathNodes.size()-1){
-            cost += getCost(pathNodes.get(i), pathNodes.get(++i));
+            cost += getCost( pathNodes.get(i), pathNodes.get(++i) );
         }
 
     }
 
-    private void DijkstraAlgorithm(Node node){
+    private void DijkstraAlgorithm(N node){
         distance.put(node, 0);
         notVisitedNodes.add(node);
         while(notVisitedNodes.size() > 0){
-            Node tmpNode = getMinimalNode(notVisitedNodes);
+            N tmpNode = getMinimalNode(notVisitedNodes);
             visitedNodes.add(tmpNode);
             notVisitedNodes.remove(tmpNode);
             findMinimalDistances(tmpNode);
         }
     }
 
-    private void findMinimalDistances(Node node){
-        Set<Node> neighbours = getNeighbours(node);
-        for (Node neighbour : neighbours){
+    private void findMinimalDistances(N node){
+        Set<N> neighbours = getNeighbours(node);
+        for (N neighbour : neighbours){
             if (findDistance(neighbour) > ( findDistance(node) + getDistance(node, neighbour) ) ) {
                 distance.put(node, findDistance(node) + getDistance(node, neighbour));
                 nodesTree.put(neighbour, node);
@@ -82,19 +85,19 @@ public class SearchAlgorithm {
         }
     }
 
-    private boolean isVisited(Node node){
+    private boolean isVisited(N node){
         return visitedNodes.contains(node);
     }
 
-    private int findDistance(Node targetPoint){
+    private int findDistance(N targetPoint){
         Integer length = distance.get(targetPoint);
         if(length == null) return Integer.MAX_VALUE;
         else return length;
     }
 
-    private Set<Node> getNeighbours(Node node){
-        Set<Node> neighbours = new HashSet<>();
-        for(Edge edge: edgesList){
+    private Set<N> getNeighbours(N node){
+        Set<N> neighbours = new HashSet<>();
+        for(Edge<N> edge: edgesList){
             if(edge.getStartPoint().equals(node) && !isVisited(edge.getTargetPoint()) ){
                 neighbours.add(edge.getTargetPoint());
             }
@@ -102,9 +105,9 @@ public class SearchAlgorithm {
         return neighbours;
     }
 
-    private Node getMinimalNode(Set<Node> nodes){
-        Node tmpNode = null;
-        for(Node node: nodes){
+    private N getMinimalNode(Set<N> nodes){
+        N tmpNode = null;
+        for(N node: nodes){
             if(tmpNode == null) tmpNode = node;
             else if(findDistance(node) != Integer.MAX_VALUE && findDistance(node) == findDistance(tmpNode)) {
                 throw new IllegalArgumentException("2 path with same length");
@@ -114,8 +117,8 @@ public class SearchAlgorithm {
         return tmpNode;
     }
 
-    private int getDistance(Node start, Node end){
-        for (Edge edge: edgesList){
+    private int getDistance(N start, N end){
+        for (Edge<N> edge: edgesList){
             if (edge.getStartPoint().equals(start) && edge.getTargetPoint().equals(end)){
                 return edge.getLength();
             }
@@ -123,10 +126,10 @@ public class SearchAlgorithm {
         throw new RuntimeException("unreachable statement");
     }
 
-    private int getCost(Node start, Node end){
-        for (Edge edge : edgesList){
+    private int getCost(N start, N end){
+        for (Edge<N> edge : edgesList){
             if (edge.getStartPoint().equals(start) && edge.getTargetPoint().equals(end)){
-                return edge.getWeight();
+                return priceCount.apply(edge);
             }
         }
         throw new RuntimeException("unreachable statement");

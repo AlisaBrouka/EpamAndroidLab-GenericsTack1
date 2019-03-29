@@ -2,12 +2,20 @@ package com.epam.impl;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 
-public class Navigator implements GpsNavigator {
+public class Navigator <N extends Node> implements GpsNavigator {
 
-    private Set<Node> nodes = new HashSet<>();
-    private Set<Edge> edges = new HashSet<>();
+    private Set<N> nodes = new HashSet<>();
+    private Set<Edge<N>> edges = new HashSet<>();
     private Graph graph;
+    private Class<N> clazz;
+    private Function<Edge<N>, Integer> priceCount;
+
+    public Navigator(Class<N> clazz, Function<Edge<N>, Integer> priceCount) {
+        this.clazz = clazz;
+        this.priceCount = priceCount;
+    }
 
     @Override
     public void readData(String filePath){
@@ -27,10 +35,10 @@ public class Navigator implements GpsNavigator {
                 tmpLine = fileStrings.pop();
                 String parts[] = tmpLine.split(" ");
 
-                nodes.add(new Node(parts[0]));
-                nodes.add(new Node(parts[1]));
+                nodes.add( clazz.getConstructor(String.class).newInstance(parts[0]) );
+                nodes.add( clazz.getConstructor(String.class).newInstance(parts[1]));
 
-                edges.add( new Edge( new Node(parts[0]), new Node(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]) ) );
+                edges.add( new Edge( clazz.getConstructor(String.class).newInstance(parts[0]),  clazz.getConstructor(String.class).newInstance(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]) ) );
             }
 
             graph = new Graph(nodes, edges);
@@ -54,12 +62,12 @@ public class Navigator implements GpsNavigator {
     public Path findPath(String pointA, String pointB){
 
                 List<String> nodesNames = new LinkedList<>();
-                SearchAlgorithm sh = new SearchAlgorithm(graph);
+                SearchAlgorithm sh = new SearchAlgorithm(graph, priceCount);
 
                 sh.algorithm(pointA, pointB);
-                List<Node> pathNodes = sh.getPathNodes();
+                List<N> pathNodes = sh.getPathNodes();
 
-                for (Node node : pathNodes) {
+                for (N node : pathNodes) {
                     nodesNames.add(node.getName());
                 }
 
@@ -67,18 +75,18 @@ public class Navigator implements GpsNavigator {
     }
 
     public void printGraph(){
-        Set<Node> nodes = graph.getNodes();
-        Set<Edge> edges = graph.getEdges();
+        Set<N> nodes = graph.getNodes();
+        Set<Edge<N>> edges = graph.getEdges();
 
         System.out.println("Data from file: ");
 
         System.out.println("1) Nodes");
-        for(Node node : nodes){
+        for(N node : nodes){
             System.out.print(node.getName() + " ");
         }
 
         System.out.println("\n2) Edges");
-        for(Edge edge : edges){
+        for(Edge<N> edge : edges){
             System.out.println(edge.getStartPoint().getName() + " " + edge.getTargetPoint().getName());
         }
     }
